@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from streamlit_folium import st_folium
 import folium
+import os
 
 # Try to get API key from Streamlit secrets (for deployment)
 try:
@@ -53,15 +54,28 @@ def find_nearby_restaurants(lat, lng, df, max_distance_km=5):
     nearby_restaurants = df[df['distance'] <= max_distance_km]
     return nearby_restaurants
 
-# Load dataset with restaurant information
+# Display the current working directory (for debugging file paths)
+st.write("Current working directory:", os.getcwd())
+
+# Try loading dataset with restaurant information from the local directory
 df_with_lat_lon = None  # Initialize the dataframe variable
 
 try:
     df_with_lat_lon = pd.read_excel('df_with_lat_lon.xlsx')
+    st.success("Dataset loaded successfully from local directory.")
 except FileNotFoundError:
-    st.error("The file 'df_with_lat_lon.xlsx' was not found. Please make sure the file is in the correct location.")
+    st.error("The file 'df_with_lat_lon.xlsx' was not found in the current directory. Please check the file path.")
 except Exception as e:
-    st.error(f"Error loading the dataset: {e}")
+    st.error(f"Error loading the dataset from the local directory: {e}")
+
+# File uploader as a fallback if the file is not in the correct directory
+uploaded_file = st.file_uploader("Or, upload your Excel file", type="xlsx")
+if uploaded_file is not None:
+    try:
+        df_with_lat_lon = pd.read_excel(uploaded_file)
+        st.success("Dataset uploaded and loaded successfully.")
+    except Exception as e:
+        st.error(f"Error loading the uploaded dataset: {e}")
 
 # Streamlit application interface
 st.title("Nearby Restaurant Finder with Map")
@@ -114,4 +128,4 @@ if df_with_lat_lon is not None:
         else:
             st.error("No suggestions found. Please try again.")
 else:
-    st.error("Dataset not loaded. Please resolve the error and try again.")
+    st.error("Dataset not loaded. Please upload the file or check the file path.")
