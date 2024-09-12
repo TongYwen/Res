@@ -1,10 +1,6 @@
-googlemaps
 streamlit
+googlemaps
 pandas
 numpy
-scipy
-joblib
-scikit-learn
-plotly
-folium
 streamlit-folium
+folium
