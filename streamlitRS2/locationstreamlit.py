@@ -54,56 +54,64 @@ def find_nearby_restaurants(lat, lng, df, max_distance_km=5):
     return nearby_restaurants
 
 # Load dataset with restaurant information
+df_with_lat_lon = None  # Initialize the dataframe variable
+
 try:
     df_with_lat_lon = pd.read_excel('df_with_lat_lon.xlsx')
+except FileNotFoundError:
+    st.error("The file 'df_with_lat_lon.xlsx' was not found. Please make sure the file is in the correct location.")
 except Exception as e:
     st.error(f"Error loading the dataset: {e}")
 
 # Streamlit application interface
 st.title("Nearby Restaurant Finder with Map")
 
-# Step 1: Enter a location
-user_input = st.text_input('Type a location')
+# Check if the dataset was loaded successfully
+if df_with_lat_lon is not None:
+    # Step 1: Enter a location
+    user_input = st.text_input('Type a location')
 
-if user_input:
-    suggestions = get_autocomplete_suggestions(user_input)
-    
-    if suggestions:
-        selected_address = st.selectbox("Choose an address:", suggestions)
+    if user_input:
+        suggestions = get_autocomplete_suggestions(user_input)
         
-        if selected_address:
-            coordinates = get_lat_long(selected_address)
+        if suggestions:
+            selected_address = st.selectbox("Choose an address:", suggestions)
             
-            if coordinates:
-                st.write(f"Selected Location: {selected_address}")
-                st.write(f"Latitude: {coordinates[0]}, Longitude: {coordinates[1]}")
+            if selected_address:
+                coordinates = get_lat_long(selected_address)
                 
-                # Step 3: Find nearby restaurants
-                nearby_restaurants = find_nearby_restaurants(coordinates[0], coordinates[1], df_with_lat_lon)
-                
-                if not nearby_restaurants.empty:
-                    st.write("Restaurants within 5 km:")
-                    st.dataframe(nearby_restaurants[['name', 'latitude', 'longitude', 'distance', 'url']])
+                if coordinates:
+                    st.write(f"Selected Location: {selected_address}")
+                    st.write(f"Latitude: {coordinates[0]}, Longitude: {coordinates[1]}")
                     
-                    # Display map using folium
-                    m = folium.Map(location=[coordinates[0], coordinates[1]], zoom_start=13)
+                    # Step 3: Find nearby restaurants
+                    nearby_restaurants = find_nearby_restaurants(coordinates[0], coordinates[1], df_with_lat_lon)
                     
-                    # Add a marker for the selected location
-                    folium.Marker([coordinates[0], coordinates[1]], tooltip='Selected Location').add_to(m)
-                    
-                    # Add markers for nearby restaurants
-                    for idx, row in nearby_restaurants.iterrows():
-                        folium.Marker(
-                            [row['latitude'], row['longitude']], 
-                            popup=row['name'],
-                            tooltip=row['name']
-                        ).add_to(m)
-                    
-                    # Display map using streamlit_folium
-                    st_folium(m, width=700, height=500)
+                    if not nearby_restaurants.empty:
+                        st.write("Restaurants within 5 km:")
+                        st.dataframe(nearby_restaurants[['name', 'latitude', 'longitude', 'distance', 'url']])
+                        
+                        # Display map using folium
+                        m = folium.Map(location=[coordinates[0], coordinates[1]], zoom_start=13)
+                        
+                        # Add a marker for the selected location
+                        folium.Marker([coordinates[0], coordinates[1]], tooltip='Selected Location').add_to(m)
+                        
+                        # Add markers for nearby restaurants
+                        for idx, row in nearby_restaurants.iterrows():
+                            folium.Marker(
+                                [row['latitude'], row['longitude']], 
+                                popup=row['name'],
+                                tooltip=row['name']
+                            ).add_to(m)
+                        
+                        # Display map using streamlit_folium
+                        st_folium(m, width=700, height=500)
+                    else:
+                        st.write("No restaurants found within 5 km.")
                 else:
-                    st.write("No restaurants found within 5 km.")
-            else:
-                st.error("Could not fetch coordinates for the selected location.")
-    else:
-        st.error("No suggestions found. Please try again.")
+                    st.error("Could not fetch coordinates for the selected location.")
+        else:
+            st.error("No suggestions found. Please try again.")
+else:
+    st.error("Dataset not loaded. Please resolve the error and try again.")
