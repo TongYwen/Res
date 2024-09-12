@@ -44,7 +44,7 @@ def find_nearby_restaurants(lat, lng, df, max_distance_km=5):
     return nearby_restaurants
 
 # Load your dataset with restaurant name, address, URL, latitude, and longitude
-df_with_lat_lon = pd.read_excel('df_with_lat_lon.csv')
+df_with_lat_lon = pd.read_csv('df_with_lat_lon.csv')  # Change to read_csv for loading CSV files
 
 # Streamlit application interface
 st.title("Nearby Restaurant Finder with Map")
@@ -64,7 +64,7 @@ if user_input:
             if coordinates:
                 st.write(f"Selected Location: {selected_address}")
                 st.write(f"Latitude: {coordinates[0]}, Longitude: {coordinates[1]}")
-                
+
                 # Step 3: Find nearby restaurants
                 nearby_restaurants = find_nearby_restaurants(coordinates[0], coordinates[1], df_with_lat_lon)
                 
